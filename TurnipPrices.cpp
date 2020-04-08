@@ -390,13 +390,26 @@ int main(int argc, char **argv)
 //    endN = atoll(argv[2]);
     sscanf(argv[1], "%" SCNu32, &startN);
     sscanf(argv[2], "%" SCNu32, &endN);
-    uint32_t diff = (endN-startN)/4;
-    uint32_t start[4] = {startN, startN+diff, startN+(diff*2), startN+(diff*3)};
-    uint32_t end[4] = {start[1], start[2], start[3], endN};
+    int threads = 8;
+    uint32_t diff = (endN-startN)/threads;
+    uint32_t* start = static_cast<uint32_t*>(malloc(threads * sizeof(uint32_t)));
+    uint32_t* end = static_cast<uint32_t*>(malloc(threads * sizeof(uint32_t)));
+    
+//    uint32_t start[4] = {startN, startN+diff, startN+(diff*2), startN+(diff*3)};
+//    uint32_t end[4] = {start[1], start[2], start[3], endN};
     int wstatus;
 
+    // Initialise start and end limits according to the number of threads to run.
+    for (i = 0; i < threads; i++) {
+	start[i] = startN+(diff*i);
+	end[i] = startN+(diff*(i+1));
+    }
+
+    // Just correct for any rounding issues by simply making the last thread work harder.
+    end[threads-1] = endN; 
+
     // Fork a few processes to spread the computation.
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < threads; i++) {
         if (fork() == 0) {
             matchingSeeds(start[i], end[i]);  
             exit(0);
@@ -405,4 +418,3 @@ int main(int argc, char **argv)
     while (wait(&wstatus) > 0);
     return 0;
 }
-
