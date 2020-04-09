@@ -223,6 +223,7 @@ void TurnipPrices::calculate(int initial)
 	   }
 	   }
 	 */
+
 	if (initial == 1) {
 		whatPattern = 3;
 	}
@@ -361,92 +362,31 @@ int isEqual(int x, int y) {
 	return 0;
 }
 
-void matchingSeeds(uint32_t start, uint32_t end) {
-	uint32_t i;
-	int j, k;
+void matchingSeeds(uint32_t seed) {
+	TurnipPrices turnips;
 	float accuracy;
-	int total, matched;
 
-	fprintf(stdout, "Checking %" PRIu32 " - %" PRIu32 "\n", start, end);
+	turnips.rng.init(seed);
+	turnips.whatPattern = 3;
+	turnips.calculate(0);
 
-	total = 9;
-	for (i = start; i < end; i++) {
-		
-		TurnipPrices turnips;
-
-		turnips.rng.init(i);
-		turnips.whatPattern = 3;
-
-		accuracy = 0.0;
-		matched = 0;
-
-		//matched = isEqual(turnips.sellPrices[2], 66) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[3], 62) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[4], 59) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[5], 54) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[6], 125) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[7], 112) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[8], 138) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[9], 159) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[10], 150) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[11], 65) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[12], 62) ? matched+1 : matched; 
-		
-		turnips.calculate(0);
-
-		matched = isEqual(turnips.sellPrices[2], 122) ? matched+1 : matched; 
-		matched = isEqual(turnips.sellPrices[3], 69) ? matched+1 : matched; 
-		matched = isEqual(turnips.sellPrices[4], 61) ? matched+1 : matched; 
-		matched = isEqual(turnips.sellPrices[5], 55) ? matched+1 : matched; 
-		matched = isEqual(turnips.sellPrices[6], 101) ? matched+1 : matched; 
-		matched = isEqual(turnips.sellPrices[7], 67) ? matched+1 : matched; 
-		matched = isEqual(turnips.sellPrices[8], 59) ? matched+1 : matched; 
-		matched = isEqual(turnips.sellPrices[9], 115) ? matched+1 : matched; 
-		matched = isEqual(turnips.sellPrices[10], 149) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[11], 134) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[12], 146) ? matched+1 : matched; 
-		//matched = isEqual(turnips.sellPrices[13], 137) ? matched+1 : matched; 
-
-		accuracy = (float) matched / (float) total;
-		if (accuracy > 0.9) {
-			fprintf(stdout, "Seed: %" PRIu32 ", Accuracy: %.2f\n", i, accuracy);
-		}
-	}
+	fprintf(stdout, "Seed: %" PRIu32 ", %d %d %d %d %d %d %d %d %d %d %d %d %d\n", seed, turnips.basePrice,
+		turnips.sellPrices[2], turnips.sellPrices[3], turnips.sellPrices[4],
+		turnips.sellPrices[5], turnips.sellPrices[6], turnips.sellPrices[7],
+		turnips.sellPrices[8], turnips.sellPrices[9], turnips.sellPrices[10],
+		turnips.sellPrices[11], turnips.sellPrices[12], turnips.sellPrices[13]);
 }
 
 int main(int argc, char **argv)
 {
 	int i;
-	uint32_t startN, endN;
-	//    startN = atoll(argv[1]);
-	//    endN = atoll(argv[2]);
-	sscanf(argv[1], "%" SCNu32, &startN);
-	sscanf(argv[2], "%" SCNu32, &endN);
-	int threads = 8;
-	uint32_t diff = (endN-startN)/threads;
-	uint32_t* start = static_cast<uint32_t*>(malloc(threads * sizeof(uint32_t)));
-	uint32_t* end = static_cast<uint32_t*>(malloc(threads * sizeof(uint32_t)));
-
-	//    uint32_t start[4] = {startN, startN+diff, startN+(diff*2), startN+(diff*3)};
-	//    uint32_t end[4] = {start[1], start[2], start[3], endN};
-	int wstatus;
-
-	// Initialise start and end limits according to the number of threads to run.
-	for (i = 0; i < threads; i++) {
-		start[i] = startN+(diff*i);
-		end[i] = startN+(diff*(i+1));
+	char buffer[100];
+	uint32_t seed;
+	
+	while (fgets(buffer, 100, stdin)) {
+		sscanf(buffer, "%" SCNu32, &seed);
+		matchingSeeds(seed);  
 	}
 
-	// Just correct for any rounding issues by simply making the last thread work harder.
-	end[threads-1] = endN; 
-
-	// Fork a few processes to spread the computation.
-	for (i = 0; i < threads; i++) {
-		if (fork() == 0) {
-			matchingSeeds(start[i], end[i]);  
-			exit(0);
-		}
-	}
-	while (wait(&wstatus) > 0);
 	return 0;
 }
